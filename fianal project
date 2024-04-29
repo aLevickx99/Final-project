@@ -1,0 +1,142 @@
+import random
+
+class Monster:
+    def __init__(self, name, hp, attack, exp, equipment_drop=None):
+        self.name, self.hp, self.attack, self.exp = name, hp, attack, exp
+        self.equipment_drop = equipment_drop
+
+class Player:
+    def __init__(self, name, hp, attack, level=1, exp=0):
+        self.name, self.hp, self.attack, self.level, self.exp = name, hp, attack, level, exp
+        self.equipment = []
+        self.potion = 10  # Starting with 10 potions
+
+    def total_attack(self):
+        total_attack = self.attack
+        for equipment in self.equipment:
+            total_attack += equipment.attackbonus
+        return total_attack
+
+    def total_hp(self):
+        total_hp = self.hp
+        for equipment in self.equipment:
+            total_hp += equipment.hpbonus
+        return total_hp
+
+class Equipment:
+    def __init__(self, name, hpbonus, attackbonus, level):
+        self.name, self.hpbonus, self.attackbonus, self.level = name, hpbonus, attackbonus, level
+
+def print_player_status(player):
+    print("Player status\nName: {}\nHP: {}\nAttack Power: {}\nLevel: {}\nExp: {}\nEquipment: {}\nPotions: {}\n".format(player.name, player.total_hp(), player.total_attack(), player.level, player.exp, [i.name for i in player.equipment], player.potion))
+
+def print_monster_status(monster):
+    print("Monster status\nName: {}\nHP: {}\nAttack Power: {}\n".format(monster.name, monster.hp, monster.attack))
+
+def attack(player, monster):
+    monster_damage = random.randint(1, 10)  # Random damage by the monster
+    player.hp -= monster_damage
+    print("{} attacks {} and deals {} damage".format(monster.name, player.name, monster_damage))
+    if player.hp <= 0:
+        print("{} defeated you! Game Over!".format(monster.name))
+        return True
+    else:
+        player_damage = random.randint(1, 10)  # Random damage by the player
+        monster.hp -= player.total_attack()  # Consider player's total attack
+        print("{} attacks {} and deals {} damage".format(player.name, monster.name, player.total_attack()))
+        if monster.hp <= 0:
+            print("{} is defeated!".format(monster.name))
+            if monster.equipment_drop is not None:
+                print("{} dropped {}!".format(monster.name, monster.equipment_drop.name))
+                player.equipment.append(monster.equipment_drop)
+            return True
+    return False
+
+def level_up(player):
+    if player.exp >= player.level * 10:
+        player.level += 1
+        player.hp += 10
+        player.attack += 3
+        print("Level up!\nLevel: {}\nHP: {}\nAttack Power: {}".format(player.level, player.hp, player.attack))
+
+def use_potion(player):
+    if player.potion > 0:
+        player.hp += 100  # Restore 100 HP
+        if player.hp > 100:  # Ensure HP doesn't exceed maximum
+            player.hp = 100
+        player.potion -= 1
+        print("{} used a potion and restored 100 HP".format(player.name))
+    else:
+        print("No potions left!")
+
+def generate_maze(size):
+    maze = [[" " for _ in range(size)] for _ in range(size)]
+    # Place treasure randomly
+    x, y = random.randint(0, size-1), random.randint(0, size-1)
+    maze[x][y] = "T"  # Representing treasurereturn maze, x, y  # Return maze and treasure position
+
+def main():
+    size = 5  # Size of the maze
+    maze, player_x, player_y = generate_maze(size)  # Initialize player position
+
+    player = Player(input("Please type your name: "), 100, 10)
+
+    monsters = [
+        Monster("Wolfman", random.randint(50, 100), 5, 10, Equipment("Wolf's Armor", 10, 2, 1)),
+        Monster("Ghost", random.randint(30, 50), 6, 11, Equipment("Spectral Sword", 5, 5, 2)),
+        Monster("Zombie", random.randint(40, 60), 7, 12, Equipment("Decaying Shield", 15, 0, 1)),
+        Monster("Slime", random.randint(25, 50), 8, 13, Equipment("Slimy Helmet", 5, 3, 1)),
+        Monster("Witcher", random.randint(70, 100), 9, 14, Equipment("Witch's Robe", 20, 5, 3)),
+        Monster("Hilichurl", random.randint(10, 40), 9, 14, Equipment("Hilichurl's Spear", 10, 8, 2))
+    ]
+
+    while True:
+        print_player_status(player)
+        print("1. Move Up\n2. Move Down\n3. Move Left\n4. Move Right\n5. Check Equipment\n6. Use Potion")
+        choice = input("Please type your choice: ")
+        
+        if choice in ["1", "2", "3", "4"]:
+            # Implement movement logic here
+            if choice == "1" and player_x > 0:
+                player_x -= 1
+            elif choice == "2" and player_x < size - 1:
+                player_x += 1
+            elif choice == "3" and player_y > 0:
+                player_y -= 1
+            elif choice == "4" and player_y < size - 1:
+                player_y += 1           
+            # Encounter a monster with a certain probability
+            if random.random() < 0.5:
+                monster = random.choice(monsters)
+                print_monster_status(monster)
+                while monster.hp > 0:
+                    print("1. Attack\n2. Use Potion\n3. Escape")
+                    battle_choice = input("Please type your choice: ")
+                    if battle_choice == "1":
+                        if attack(player, monster):
+                            break
+                    elif battle_choice == "2":
+                        use_potion(player)
+                    elif battle_choice == "3":
+                        print("{} escaped".format(player.name))
+                        break
+                    else:
+                        print("Invalid choice")
+        elif choice == "5":
+            print("Player's Equipment:")
+            for equipment in player.equipment:
+                print("{} (HP Bonus: {}, Attack Bonus: {})".format(equipment.name, equipment.hpbonus, equipment.attackbonus))
+        elif choice == "6":
+            use_potion(player)
+        else:
+            print("Invalid choice")
+
+        # Check if player found the treasure
+        if maze[player_x][player_y] == "T":
+            print("\nCongratulations, {}! You found the hidden treasure!".format(player.name))
+            print("Thanks for playing!")
+            break
+
+if __name__ == "__main__":
+    main()
+
