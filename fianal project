@@ -73,7 +73,8 @@ def generate_maze(size):
     maze = [[" " for _ in range(size)] for _ in range(size)]
     # Place treasure randomly
     x, y = random.randint(0, size-1), random.randint(0, size-1)
-    maze[x][y] = "T"  # Representing treasurereturn maze, x, y  # Return maze and treasure position
+    maze[x][y] = "T"  # Representing treasure
+    return maze, x, y  # Return maze and treasure position
 
 def main():
     size = 5  # Size of the maze
@@ -139,4 +140,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
